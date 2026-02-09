@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>365DF – User DApp (CoreV5 + VaultV6)</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- ethers v5 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- config + app -->
+  <script src="config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1>365DF User DApp</h1>
+        <div class="sub">CoreV5 + VaultV6 + BinaryV4 + StakingV4</div>
+      </div>
+      <div class="walletBox">
+        <button id="btnConnect" class="btn">เชื่อมต่อกระเป๋า</button>
+        <div class="mono small">
+          <div>Wallet: <span id="walletAddr">-</span></div>
+          <div>Network: <span id="netText">-</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div id="toast" class="toast">-</div>
+
+    <!-- Addresses -->
+    <section class="card">
+      <div class="row">
+        <div class="col">
+          <div class="label">CoreV5</div>
+          <div class="mono small" id="coreAddr">-</div>
+        </div>
+        <div class="col">
+          <div class="label">VaultV6</div>
+          <div class="mono small" id="vaultAddr">-</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="label">BinaryV4</div>
+          <div class="mono small" id="binaryAddr">-</div>
+        </div>
+        <div class="col">
+          <div class="label">StakingV4</div>
+          <div class="mono small" id="stakingAddr">-</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="label">USDT</div>
+          <div class="mono small" id="usdtAddr">-</div>
+        </div>
+        <div class="col">
+          <div class="label">DF</div>
+          <div class="mono small" id="dfAddr">-</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnRefresh" class="btn ghost">รีเฟรชข้อมูล</button>
+        <button id="btnAddTokens" class="btn ghost">เพิ่ม Token ในกระเป๋า</button>
+      </div>
+      <div class="muted small" id="status">Ready.</div>
+    </section>
+
+    <!-- Referral -->
+    <section class="card">
+      <h2>ลิงก์แนะนำ</h2>
+      <div class="row">
+        <div class="col">
+          <div class="label">Left Link (L)</div>
+          <div class="mono small" id="leftLink">-</div>
+          <div class="actions">
+            <button id="btnCopyLeft" class="btn ghost">Copy</button>
+            <button id="btnShareLeft" class="btn ghost">Share</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="label">Right Link (R)</div>
+          <div class="mono small" id="rightLink">-</div>
+          <div class="actions">
+            <button id="btnCopyRight" class="btn ghost">Copy</button>
+            <button id="btnShareRight" class="btn ghost">Share</button>
+          </div>
+        </div>
+      </div>
+      <div class="muted small">
+        * ลิงก์จะล็อก Sponsor อัตโนมัติจากพารามิเตอร์ <span class="mono">?ref=...&side=...</span>
+      </div>
+    </section>
+
+    <!-- Buy / Upgrade -->
+    <section class="card">
+      <h2>ซื้อ / อัปเกรดแพ็คเกจ</h2>
+
+      <div class="grid3">
+        <button class="pkg" id="pkg1" data-pkg="1">
+          <div class="pkgTitle">Small</div>
+          <div class="pkgSub mono">100 USDT</div>
+        </button>
+        <button class="pkg" id="pkg2" data-pkg="2">
+          <div class="pkgTitle">Medium</div>
+          <div class="pkgSub mono">1000 USDT</div>
+        </button>
+        <button class="pkg" id="pkg3" data-pkg="3">
+          <div class="pkgTitle">Large</div>
+          <div class="pkgSub mono">10000 USDT</div>
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Sponsor (referrer)</div>
+          <input id="inpSponsor" class="inp mono" placeholder="0x..." />
+          <div class="muted small" id="sponsorHint">ถ้าเว้นว่าง จะใช้ company sponsor</div>
+        </div>
+        <div class="col">
+          <div class="label">Placement Parent (วางใต้ใคร)</div>
+          <input id="inpPlacement" class="inp mono" placeholder="ว่าง = ใช้ Sponsor" />
+          <div class="muted small">CoreV5 รองรับวางใต้ใครก็ได้ในทีม (ขยายได้หลายชั้น)</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Side</div>
+          <div class="actions">
+            <button id="btnSideL" class="btn primary">Left</button>
+            <button id="btnSideR" class="btn ghost">Right</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="label">การทำรายการ</div>
+          <div class="actions">
+            <button id="btnApprove" class="btn">Approve USDT</button>
+            <button id="btnBuy" class="btn">Buy / Upgrade</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="muted small" id="buyStatus">Ready.</div>
+    </section>
+
+    <!-- Dashboard -->
+    <section class="card">
+      <h2>ข้อมูลบัญชี (Core / Binary / Staking)</h2>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">My Package</div>
+          <div class="val" id="myPkg">-</div>
+        </div>
+        <div class="col">
+          <div class="label">My Rank</div>
+          <div class="val" id="myRank">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Sponsor</div>
+          <div class="val mono" id="mySponsor">-</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Binary Vol L</div>
+          <div class="val mono" id="volL">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Binary Vol R</div>
+          <div class="val mono" id="volR">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Paid/Processed (P)</div>
+          <div class="val mono" id="volP">-</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Staking Pending Reward (DF)</div>
+          <div class="val mono" id="pendingStake">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Stake End</div>
+          <div class="val mono" id="stakeEnd">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Stake Claimed</div>
+          <div class="val mono" id="stakeClaimed">-</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnClaimStake" class="btn ghost">Claim Stake</button>
+      </div>
+
+      <div class="muted small" id="dashStatus">-</div>
+    </section>
+
+    <!-- Vault -->
+    <section class="card">
+      <h2>คอมมิชชั่น (VaultV6)</h2>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Claimable USDT</div>
+          <div class="val mono" id="vClaimableUSDT">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Claimed USDT</div>
+          <div class="val mono" id="vClaimedUSDT">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Unlocked USDT</div>
+          <div class="val mono" id="vUnlockedUSDT">-</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="label">Locked USDT</div>
+          <div class="val mono" id="vLockedUSDT">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Lock Start</div>
+          <div class="val mono" id="vLockStartUSDT">-</div>
+        </div>
+        <div class="col">
+          <div class="label">Lock End</div>
+          <div class="val mono" id="vLockEndUSDT">-</div>
+        </div>
+      </div>
+
+      <div id="vaultWarn" class="warnBox">
+        ⚠️ หากมี Locked: จะปลดได้เมื่อ “เพดาน (cap) เพิ่ม” จากการซื้อ/อัปเกรด และต้องมีการ refresh/claim ตามกติกาสัญญา
+      </div>
+
+      <div class="actions">
+        <button id="btnVaultRefresh" class="btn ghost">Refresh Vault</button>
+        <button id="btnClaimVault" class="btn">Claim Vault</button>
+      </div>
+
+      <div class="muted small" id="vaultStatus">-</div>
+    </section>
+
+    <footer class="foot">
+      <div class="muted small">
+        เปิดผ่าน Bitget/MetaMask DApp Browser • ธีม ดำ-ทอง • Version: Clean V1
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
